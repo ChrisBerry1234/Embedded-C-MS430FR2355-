@@ -35,7 +35,7 @@ init:
             bis.b    #BIT1, &P4IE                        ; set local enable for P4.1
             eint                                         ; enable global maskables
             
-main 
+main: 
             jmp       main
 ;--------------------------------------------------------
 ; Data Allocation
@@ -44,7 +44,7 @@ main
 ; Interrupt Service Routines
 ;---------------------------------------------------------
 ISR_S1:
-            xor.b       #BIT0, P1OUT                         ; toggle LED1
+            xor.b       #BIT0, &P1OUT                         ; toggle LED1
             bic.b       #BIT1, &P4IFG                        ; clear P4IFG otherwise interrupt will continue to run
             reti
 ;--------------------------------------------------------
@@ -56,7 +56,7 @@ ISR_S1:
 ; Interrupt Vectors
 ;---------------------------------------------------------
             .sect      ".reset"                                ; MSP430 RESET Vector Highest Priority Vector
-            .short     "RESET"                                 ; ISR ADDRESS
+            .short     RESET                                 ; ISR ADDRESS
 
             .sect      ".int22"                                ; port 4 vector table
             .short     ISR_S1                                  ; ISR ADDRESS
