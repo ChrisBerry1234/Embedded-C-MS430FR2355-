@@ -33,7 +33,7 @@ int main(void)
 
 //---------ISRs---------------//
 #pragma vector = TIMER0_B1_VECTOR 
-#interrupt void ISR_TB0_Overflow(void)
+#interrupt void ISR_TB1_Overflow(void)
 {
   P1OUT ^= BIT0; //TOGGLE LED ON
   P6OUT ^= BIT0; //TOGGLE LED OFF
