@@ -15,7 +15,7 @@ int main(void)
 
   //-Setup Timer
   TB0CTL |= TBCLR;          // clear TB0 timer
-  TB0CTL |= TBSSEL__SMCLK;  // choose ACLK as main clock source
+  TB0CTL |= TBSSEL__SMCLK;  // choose SMCLK as main clock source
   TB0CTL |= MC__CONTINUOUS; // Put timer into continous mode
 
   //setup timer IRQ
