@@ -73,14 +73,14 @@ __interrupt void ISR_PORT4(void)
 {
   position = 0;                        // start at position of packet of bits
   UCA0TXBUF = packet[position];        // grab most recent packet of data
-  P4IFG &= ~BIT1                       // CLEAR BUTTON FOR NEW INCOMING DATA IRQ
+  P4IFG &= ~BIT1;                       // CLEAR BUTTON FOR NEW INCOMING DATA IRQ
 }
 
 
 #pragma vector = EUSCI_A0_VECTOR      //This IRQ is called when the buffer just sent out data is now empty
 __interrupt void ISR_EUSCI_A0(void)
 {
-  position ++                           //increment to next byte in data packet
+  position ++;                           //increment to next byte in data packet
   if (position == sizeof(packet)        //branching logic to now if we have reached the end of packet 
   {
       UCA0IFG &= ~UCTXIFG;              //clear flag although buffer is empty to stop data transmission 
