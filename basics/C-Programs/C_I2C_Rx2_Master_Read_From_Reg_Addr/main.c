@@ -4,7 +4,7 @@
 //======================================================
 volatile unsigned char data_read;
 
-//CREATE ENUM FOR DATA TYPE FOR FUNCTIONS
+//CREATE ENUM FOR DATA TYPE FOR API FUNCTIONS
 typedef enum
 {
     I2C_RESULT_OK,
@@ -13,6 +13,12 @@ typedef enum
     I2C_RESULT_ERROR_RX,
     I2C_RESULT_ERROR_START
 } i2c_result_e;
+
+//APIs DECLARATION
+static void i2c_start_tx(void);
+static void i2c_start_rx(void);
+static void i2c_send_stop(void);
+static i2c_result_e i2c_wait_stop(void);
 
 //======================================================
 // MAIN
@@ -98,18 +104,22 @@ int main(void)
 
     while (1)
     {
-        //---Transmit Register Address with WRITE message
-        UCB
-        //---Receive Data from Slave with a READ Message 
-      
 
-        // Generate START condition
-        // Hardware will then send:
-        // START -> address + write -> ACK
-        UCB0CTLW0 |= UCTXSTT;
-
+        static void i2c_start_tx(void);
         // Wait for STOP to finish before next transaction
-        while (UCB0CTLW0 & UCTXSTP);
+        i2c_result_e result = i2c_wait_stop(void);
+        if (result == I2C_RESULT_ERROR_TIMEOUT)
+        {
+            return; 
+        }
+
+        static void i2c_start_rx(void);
+        // Wait for STOP to finish before next transaction
+        i2c_result_e result = i2c_wait_stop(void);
+        if (result == I2C_RESULT_ERROR_TIMEOUT)
+        {
+            return; 
+        }
 
         // Small delay between transactions
         __delay_cycles(50000);
@@ -117,4 +127,57 @@ int main(void)
 
     return 0;
 }
+
+//-------------APIs-------------------------
+
+static void i2c_result_e i2c_start_tx(void)
+{
+    UCB0CTLW0 |= UCTR;     // Transmitter mode
+    UCB0CTLW0 |= UCTXSTT; // PUT INTO START MODE
+}
+
+static void i2c_result_e i2c_start_rx(void)
+{
+    UCB0CTLW0 &= ~UCTR;       //receiver mode
+    UCB0CTLW0 |= UCTXSTT;    // PUT INTO START MODE AND START TRANSMISSION
+     
+}
+
+static i2c_result_e i2c_wait_stop(void)
+{
+    uint16_t retries = RETRY_COUNT;
+
+    //wait until STOP flag is asserted or timeout(AND)
+    while(!(UCB0IFG & UCSTPIFG) && --retries)
+    {}
+    //TIMEOUT
+    if (retries == 0)
+    {
+        return I2C_RESULT_ERROR_TIMEOUT
+    }
+
+    //CLEAR STOP FLAG
+    UCB0IFG &= ~UCSTPIFG;
+
+    return I2C_RESULT_OK;   
+}
+
+
+//-------Interrupt Service Routines
+#pragma vector EUSCI_B0_VECTOR
+__Interrupt Void EUSCI_B0_I2C_VECTOR(void)
+{
+    switch(__even_in_range(UCBIV, 0x1E))
+        {
+            case 0x16:                   // ID 16: RXIFG0
+                data_read = UCB0RXBUF;   //Read data from Rx Buffer
+                break;
+
+            case 0x18:                   // ID 18: TXIFG0
+                UCB0TXBUF = 0x03;        // Send Reg Addr
+                break;
+
+            default:
+                break;
+        }
 }
