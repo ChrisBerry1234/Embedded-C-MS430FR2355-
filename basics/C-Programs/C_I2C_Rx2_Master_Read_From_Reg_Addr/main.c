@@ -4,6 +4,9 @@
 //======================================================
 volatile unsigned char data_read;
 
+#define RETRY_COUNT 50000
+#define DATA_SIZE   1
+
 //CREATE ENUM FOR DATA TYPE FOR API FUNCTIONS
 typedef enum
 {
@@ -63,7 +66,7 @@ int main(void)
     UCB0CTLW1 |= UCASTP_2;
 
     // Number of bytes to transmit
-    UCB0TBCNT = data_size;
+    UCB0TBCNT = DATA_SIZE;
 
 
     //==================================================
@@ -148,7 +151,7 @@ static i2c_result_e i2c_wait_stop(void)
 
     //wait until STOP flag is asserted or timeout(AND)
     while(!(UCB0IFG & UCSTPIFG) && 
-          !(UCB0STAT & UCNACKIFG) --retries){}
+          !(UCB0STAT & UCNACKIFG) && --retries){}
     //TIMEOUT
     if (retries == 0)
     {
