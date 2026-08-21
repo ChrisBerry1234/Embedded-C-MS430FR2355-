@@ -17,7 +17,6 @@ typedef enum
 //APIs DECLARATION
 static void i2c_start_tx(void);
 static void i2c_start_rx(void);
-static void i2c_send_stop(void);
 static i2c_result_e i2c_wait_stop(void);
 
 //======================================================
@@ -105,20 +104,20 @@ int main(void)
     while (1)
     {
 
-        static void i2c_start_tx(void);
+        i2c_start_tx();
         // Wait for STOP to finish before next transaction
-        i2c_result_e result = i2c_wait_stop(void);
+        i2c_result_e result = i2c_wait_stop();
         if (result == I2C_RESULT_ERROR_TIMEOUT)
         {
-            return; 
+            return 1; 
         }
 
-        static void i2c_start_rx(void);
+        i2c_start_rx();
         // Wait for STOP to finish before next transaction
-        i2c_result_e result = i2c_wait_stop(void);
+        i2c_result_e result = i2c_wait_stop();
         if (result == I2C_RESULT_ERROR_TIMEOUT)
         {
-            return; 
+            return 1; 
         }
 
         // Small delay between transactions
@@ -130,13 +129,13 @@ int main(void)
 
 //-------------APIs-------------------------
 
-static void i2c_result_e i2c_start_tx(void)
+static void i2c_start_tx(void)
 {
     UCB0CTLW0 |= UCTR;     // Transmitter mode
     UCB0CTLW0 |= UCTXSTT; // PUT INTO START MODE
 }
 
-static void i2c_result_e i2c_start_rx(void)
+static void i2c_start_rx(void)
 {
     UCB0CTLW0 &= ~UCTR;       //receiver mode
     UCB0CTLW0 |= UCTXSTT;    // PUT INTO START MODE AND START TRANSMISSION
@@ -148,12 +147,17 @@ static i2c_result_e i2c_wait_stop(void)
     uint16_t retries = RETRY_COUNT;
 
     //wait until STOP flag is asserted or timeout(AND)
-    while(!(UCB0IFG & UCSTPIFG) && --retries)
-    {}
+    while(!(UCB0IFG & UCSTPIFG) && 
+          !(UCB0STAT & UCNACKIFG) --retries){}
     //TIMEOUT
     if (retries == 0)
     {
-        return I2C_RESULT_ERROR_TIMEOUT
+        return I2C_RESULT_ERROR_TIMEOUT;
+    }
+
+    if ((UCB0STAT & UCNACKIFG))
+    {
+        return I2C_RESULT_ERROR_RX;
     }
 
     //CLEAR STOP FLAG
